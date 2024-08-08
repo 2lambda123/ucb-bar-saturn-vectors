@@ -75,6 +75,7 @@ class StoreSequencer(implicit p: Parameters) extends PipeSequencer(new StoreData
   val vm_mask   = Mux(!renvm, ~(0.U(dLenB.W)), get_vm_mask(io.rvm.resp, eidx, inst.mem_elem_size))
   io.iss.bits.stmask := vm_mask
   io.iss.bits.debug_id := inst.debug_id
+  io.iss.bits.debug_eg := io.rvd.req.bits.eg
   io.iss.bits.tail := tail
   io.iss.bits.vat := inst.vat
 

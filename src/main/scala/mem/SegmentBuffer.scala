@@ -172,6 +172,7 @@ class StoreSegmentBuffer(doubleBuffer: Boolean)(implicit p: Parameters) extends 
   io.out.bits.data.stdata := Mux1H(UIntToOH(row_sel), array.map(row => VecInit(row.map(_(out_sel))).asUInt))
   io.out.bits.data.stmask := Fill(dLenB, (Mux1H(UIntToOH(out_sel), mask) >> (out_row << out_eew(out_sel)))(0))
   io.out.bits.data.debug_id := out_id(out_sel)
+  io.out.bits.data.debug_eg := DontCare
   io.out.bits.head := out_sidx(out_sel) << out_eew(out_sel)
   val remaining_bytes = (out_nf(out_sel) +& 1.U - out_sidx(out_sel)) << out_eew(out_sel)
   io.out.bits.tail := Mux((remaining_bytes +& io.out.bits.head) >= dLenB.U, dLenB.U, remaining_bytes + io.out.bits.head)

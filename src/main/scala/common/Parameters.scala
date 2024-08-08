@@ -166,6 +166,8 @@ case class VectorParams(
   issStructure: VectorIssueStructure = VectorIssueStructure.Unified,
 
   tlBuffer: BufferParams = BufferParams.default,
+
+  enablePipeView: Boolean = true,
 )
 
 case object VectorParamsKey extends Field[VectorParams]

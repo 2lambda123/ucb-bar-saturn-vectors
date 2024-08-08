@@ -234,6 +234,7 @@ class ExecuteSequencer(supported_insns: Seq[VectorInstruction])(implicit p: Para
   io.iss.bits.vat       := inst.vat
   io.iss.bits.vm        := inst.vm
   io.iss.bits.rm        := inst.rm
+  io.iss.bits.debug_id  := inst.debug_id
 
   val dlen_mask = ~(0.U(dLenB.W))
   val head_mask = dlen_mask << (eidx << vd_eew)(dLenOffBits-1,0)

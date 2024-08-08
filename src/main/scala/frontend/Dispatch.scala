@@ -111,6 +111,7 @@ class VectorDispatcher(implicit p: Parameters) extends CoreModule()(p) with HasV
   io.mem.bits.store := issue_inst.bits(5)
   io.mem.bits.fast_sg := issue_inst.fast_sg
   io.mem.bits.debug_id := issue_inst.debug_id
+  io.mem.bits.debug_rd := issue_inst.rd
 
   // Strided with stride = 1 << eew is just unit-strided
   when (issue_inst.mop === mopStrided && issue_inst.rs2_data === (1.U << issue_inst.mem_elem_size)) {
@@ -124,5 +125,12 @@ class VectorDispatcher(implicit p: Parameters) extends CoreModule()(p) with HasV
       vat_valids(r.bits) := false.B
       hwacha_limiter.foreach(_.io.vat_release(r.bits) := true.B)
     }
+  }
+
+  if (vParams.enablePipeView) {
+    val cycle = RegInit(0.U(32.W))
+    cycle := cycle + 1.U
+
+    PipeView.dispatch(io.dis, "dispatch", cycle)
   }
 }

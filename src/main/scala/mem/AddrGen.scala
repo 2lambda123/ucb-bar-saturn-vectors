@@ -102,6 +102,9 @@ class AddrGen(implicit p: Parameters) extends CoreModule()(p) with HasVectorPara
   io.req.bits.tag := io.tag.bits
   io.req.bits.store := DontCare
 
+  io.req.bits.debug_id := io.op.debug_id
+  io.req.bits.debug_eg := getEgId(io.op.debug_rd + sidx, eidx / (io.op.seg_nf +& 1.U), mem_size, false.B)
+
   io.tag.ready := io.valid && (io.req.ready || masked) && io.out.ready && !block_maskindex
 
   when (io.out.fire) {

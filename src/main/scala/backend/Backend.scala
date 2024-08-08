@@ -367,6 +367,7 @@ class VectorBackend(implicit p: Parameters) extends CoreModule()(p) with HasVect
   load_write.bits.eg   := vls.io.iss.bits.wvd_eg
   load_write.bits.data := io.vmu.lresp.bits.data
   load_write.bits.mask := FillInterleaved(8, vls.io.iss.bits.wmask)
+  load_write.bits.debug_id := vls.io.iss.bits.debug_id
   when (io.vmu.lresp.fire) {
     assert(io.vmu.lresp.bits.debug_id === vls.io.iss.bits.debug_id)
   }
@@ -389,6 +390,7 @@ class VectorBackend(implicit p: Parameters) extends CoreModule()(p) with HasVect
   vrf.io.ll_writes(1).bits.eg   := reset_ctr
   vrf.io.ll_writes(1).bits.data := 0.U
   vrf.io.ll_writes(1).bits.mask := ~(0.U(dLen.W))
+  vrf.io.ll_writes(1).bits.debug_id := DontCare
   vxus.zipWithIndex.foreach { case (vxu,i) =>
     vrf.io.ll_writes(2+i) <> vxu.io.iter_write
   }
@@ -512,4 +514,22 @@ class VectorBackend(implicit p: Parameters) extends CoreModule()(p) with HasVect
   io.set_fflags.valid := vxus.map(_.io.set_fflags.valid).asUInt.orR
   io.set_fflags.bits  := vxus.map( xu => Mux(xu.io.set_fflags.valid, xu.io.set_fflags.bits, 0.U)).reduce(_|_)
   io.scalar_resp <> vxus(0).io.scalar_write
+
+
+  if (vParams.enablePipeView) {
+    val cycle = RegInit(0.U(32.W))
+    cycle := cycle + 1.U
+
+    for (xs <- vxs) {
+      PipeView.ex(xs.io.iss, "vxsop", cycle)
+    }
+    PipeView.sdata(vss.io.iss, "vssop", cycle)
+
+    for (xu <- vxus) {
+      PipeView.wb(xu.io.pipe_write, "write.v", cycle)
+      PipeView.wb(xu.io.iter_write, "write.v", cycle)
+      PipeView.wb(xu.io.acc_write, "write.va", cycle)
+    }
+    PipeView.wb(vrf.io.ll_writes(0), "write.v", cycle)
+  }
 }

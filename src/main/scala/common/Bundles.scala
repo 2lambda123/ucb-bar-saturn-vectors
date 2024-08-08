@@ -9,6 +9,7 @@ import freechips.rocketchip.tile._
 
 class VectorMemMacroOp(implicit p: Parameters) extends CoreBundle()(p) with HasVectorParams {
   val debug_id = UInt(debugIdSz.W)
+  val debug_rd = UInt(5.W)
 
   val base_offset = UInt(pgIdxBits.W)
   val page        = UInt((paddrBits - pgIdxBits).W)
@@ -111,6 +112,7 @@ class VectorWrite(writeBits: Int)(implicit p: Parameters) extends CoreBundle()(p
   def bankId = if (vrfBankBits == 0) 0.U else eg(vrfBankBits-1,0)
   val data = UInt(writeBits.W)
   val mask = UInt(writeBits.W)
+  val debug_id = UInt(debugIdSz.W)
 }
 
 class ScalarWrite extends Bundle {
@@ -205,12 +207,15 @@ class ExecuteMicroOp(implicit p: Parameters) extends CoreBundle()(p) with HasVec
   val rm = UInt(3.W)
   def vxrm = rm(1,0)
   def frm = rm
+
+  val debug_id = UInt(debugIdSz.W)
 }
 
 class StoreDataMicroOp(implicit p: Parameters) extends CoreBundle()(p) with HasVectorParams {
   val stdata = UInt(dLen.W)
   val stmask = UInt(dLenB.W)
   val debug_id = UInt(debugIdSz.W)
+  val debug_eg = UInt(log2Ceil(egsTotal).W)
   val tail = Bool()
   val vat = UInt(vParams.vatSz.W)
   def asMaskedBytes = {

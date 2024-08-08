@@ -38,12 +38,15 @@ class IFQEntry(implicit p: Parameters) extends CoreBundle()(p) with HasVectorPar
   val page_offset = UInt(pgIdxBits.W)
 }
 
-class MemRequest(bytes: Int, tagBits: Int)(implicit p: Parameters) extends CoreBundle()(p) {
+class MemRequest(bytes: Int, tagBits: Int)(implicit p: Parameters) extends CoreBundle()(p) with HasVectorParams {
   val addr = UInt(coreMaxAddrBits.W)
   val data = UInt((bytes*8).W)
   val mask = UInt(bytes.W)
   val tag = UInt(tagBits.W)
   val store = Bool()
+
+  val debug_id = UInt(debugIdSz.W)
+  val debug_eg = UInt(log2Ceil(egsTotal).W)
 }
 
 class MemResponse(bytes: Int, tagBits: Int)(implicit p: Parameters) extends CoreBundle()(p) {
@@ -399,4 +402,22 @@ class VectorMemUnit(sgSize: Option[BigInt] = None)(implicit p: Parameters) exten
   io.dmem.load_req.bits.mask := ~(0.U(dLenB.W))
 
   io.busy := liq_valids.orR || siq_valids.orR
+
+  if (vParams.enablePipeView) {
+    val cycle = RegInit(0.U(32.W))
+    cycle := cycle + 1.U
+
+    PipeView.mem(las.io.req, "lasop", cycle) // omit replays
+    PipeView.mem(store_req_q.io.deq, "sasop", cycle)
+
+    io.sgmem.foreach { sgmem =>
+      for (sg <- sgmem.req) {
+        when (sg.bits.store) {
+          PipeView.mem(sg, "sgsop", cycle)
+        } .otherwise {
+          PipeView.mem(sg, "sggop", cycle)
+        }
+      }
+    }
+  }
 }

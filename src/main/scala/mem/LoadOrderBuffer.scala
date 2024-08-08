@@ -102,6 +102,9 @@ class LoadOrderBuffer(nEntries: Int, nRobEntries: Int)(implicit p: Parameters) e
   io.replay.bits.tag  := next_replay
   io.replay.bits.store := false.B
 
+  io.replay.bits.debug_id := DontCare
+  io.replay.bits.debug_eg := DontCare
+
   when (io.replay.fire) {
     must_replay(next_replay) := false.B
   }

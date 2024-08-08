@@ -141,10 +141,13 @@ class ExecutionUnit(val suffix: String, genFUs: Seq[(() => FunctionalUnit, Strin
     when (write_sel.orR) {
       val acc = Mux1H(write_sel, pipe_bits.map(_.acc))
       val tail = Mux1H(write_sel, pipe_bits.map(_.tail))
+      val debug_id = Mux1H(write_sel, pipe_bits.map(_.debug_id))
       io.pipe_write.valid := Mux1H(fu_sel, pipe_fus.map(_.io.write.valid)) && (!acc || tail)
       io.pipe_write.bits := Mux1H(fu_sel, pipe_fus.map(_.io.write.bits))
+      io.pipe_write.bits.debug_id := debug_id
       io.acc_write.valid := acc && !tail
       io.acc_write.bits := Mux1H(fu_sel, pipe_fus.map(_.io.write.bits))
+      io.acc_write.bits.debug_id := debug_id
     }
 
     when (pipe_valids.orR) { io.busy := true.B }
@@ -169,11 +172,13 @@ class ExecutionUnit(val suffix: String, genFUs: Seq[(() => FunctionalUnit, Strin
     io.iter_write.bits.eg   := iter_write_arb.io.out.bits.eg
     io.iter_write.bits.mask := iter_write_arb.io.out.bits.mask
     io.iter_write.bits.data := iter_write_arb.io.out.bits.data
+    io.iter_write.bits.debug_id := iter_write_arb.io.out.bits.debug_id
     when (!pipe_write) {
       io.acc_write.valid := iter_write_arb.io.out.valid && acc
       io.acc_write.bits.eg   := Mux1H(iter_write_arb.io.in.map(_.fire), iter_fus.map(_.io.write.bits.eg))
       io.acc_write.bits.data := Mux1H(iter_write_arb.io.in.map(_.fire), iter_fus.map(_.io.write.bits.data))
       io.acc_write.bits.mask := Mux1H(iter_write_arb.io.in.map(_.fire), iter_fus.map(_.io.write.bits.mask))
+      io.acc_write.bits.debug_id := Mux1H(iter_write_arb.io.in.map(_.fire), iter_fus.map(_.io.write.bits.debug_id))
     }
     when (iter_fus.map(_.io.busy).orR) { io.busy := true.B }
     for (i <- 0 until iter_fus.size) {
